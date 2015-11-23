@@ -25,12 +25,12 @@
 ## Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 TEMPLATE = app
-INCLUDEPATH += . /usr/include/qt4/Qt WMtk WMtk/src
-LIBS += WMtk/src/.libs/libWMtk.a
+INCLUDEPATH += . /usr/include/qt4/Qt wmtk wmtk/src
+LIBS += wmtk/src/.libs/libWMtk.a
 QT += qt3support
 
-wmtk.target = WMtk/src/.libs/libWMtk.a
-wmtk.commands = cd WMtk; ./configure ; make
+wmtk.target = wmtk/src/.libs/libWMtk.a
+wmtk.commands = cd wmtk; ./configure ; make
 wmtk.depends = wmtk_output
 
 wmtk_output.commands = @echo Building the Working Memory Toolkit...
