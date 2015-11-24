@@ -16,6 +16,8 @@ distributions, this is provided in the libqt4-qt3support package.
 Basic Installation for most flavors of Unix (Linux):
 ****************************************************
 
+git submodule init
+git submodule update
 qmake-qt4
 make
 

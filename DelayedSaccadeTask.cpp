@@ -28,7 +28,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <list>
-#include <time.h>
+#include <ctime>
 
 // Use the Working Memory Toolkit API...
 #include <WMtk.h>
