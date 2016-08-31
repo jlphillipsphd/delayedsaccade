@@ -26,7 +26,7 @@
 
 // Standard Headers
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <list>
 #include <ctime>
 
@@ -40,7 +40,7 @@ using namespace std;
 
 // The main function for the program. This is the function that actually
 // performs the simulation.
-void RunSimulation(SaccadeWindow& win) {
+int main(int argc, char *argv[]) {
 
 
 
@@ -69,11 +69,6 @@ void RunSimulation(SaccadeWindow& win) {
 
 
 
-	// initialize the display window ...
-	win.initializeDisplay();
-
-
-
 	int x;	// Local counter
 
 	int wm_size = 3;						// Working memory size.
@@ -93,8 +88,9 @@ void RunSimulation(SaccadeWindow& win) {
 	//time_t good_seed = 1098415842;	// After changes, this didn't work so
 										// well.
 	time_t good_seed = 1099072248;		// New seed ~= 300 episodes.
-	if (win.forceGoodSeed())
-	  random_seed = good_seed;
+	// If you want an instance when it learns "fast" - may need to
+	// be changed above for your system though! :)
+	// random_seed = good_seed;
 	srand(random_seed);
 	srand48(random_seed);
 	cerr << "Random Seed:  " << random_seed << "\n";
@@ -615,15 +611,6 @@ void RunSimulation(SaccadeWindow& win) {
 			  break;
 			}
 
-			win.updateDisplay(trial, 
-					  WM.getEpisodeTime(),
-					  (current_state.middle == CROSS),
-					  target_pos_num,
-					  gaze_pos_num,
-					  fixate, c_in_memory, t_in_memory,
-					  current_state.success);
-			win.pauseDisplay();
-
 		}  // while ...
 
 		// Output the trial number
@@ -650,10 +637,6 @@ void RunSimulation(SaccadeWindow& win) {
 		if (goodness_index == window_size)
 			goodness_index = 0;
 
-		// Slow down if we're almost done ...
-		if (goodness > 0.85) {
-		  win.setSlowDuration();
-		}
 		// If we are performing as well as we want, then we're finished.
 		if (goodness >= finished_percentage) {
 			break;
@@ -663,7 +646,7 @@ void RunSimulation(SaccadeWindow& win) {
 
 	// Save the final network to a file.
 	WM.saveNetwork("./ending_network.dat");
-	return;
+	return 0;
 }
 
 // Clears the state information for a new trial (required by reward function)

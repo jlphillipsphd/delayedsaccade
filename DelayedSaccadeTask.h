@@ -36,7 +36,6 @@
 #ifndef DST_H
 #define DST_H
 
-#include "delayedsaccade.h"
 #include <WMtk.h>
 
 // Items in the world - these are the possible things that can be in view.
@@ -119,9 +118,5 @@ double user_reward_function(WorkingMemory& wm);
 void user_state_function(FeatureVector& fv, WorkingMemory& wm);
 void user_chunk_function(FeatureVector& fv, Chunk& chk, WorkingMemory& wm);
 void user_delete_function(Chunk& chk);
-
-// The main function for the program. This is the function that actually
-// performs the simulation.
-void RunSimulation(SaccadeWindow& win);
 
 #endif  // ifndef DST_H
