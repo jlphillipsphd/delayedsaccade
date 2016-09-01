@@ -25,9 +25,8 @@
 ## Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 TEMPLATE = app
-INCLUDEPATH += . /usr/include/qt4/Qt wmtk wmtk/src
+INCLUDEPATH += . wmtk wmtk/src
 LIBS += wmtk/src/.libs/libWMtk.a
-QT += qt3support
 
 wmtk.target = wmtk/src/.libs/libWMtk.a
 wmtk.commands = cd wmtk; ./configure ; make
@@ -39,8 +38,5 @@ PRE_TARGETDEPS += $$wmtk.target
 QMAKE_EXTRA_TARGETS += wmtk wmtk_output
 
 # Input
-HEADERS += delayedsaccade.h DelayedSaccadeTask.h unfilledellipse.h
-SOURCES += delayedsaccade.cpp \
-           DelayedSaccadeTask.cpp \
-           main.cpp \
-           unfilledellipse.cpp
+HEADERS += DelayedSaccadeTask.h
+SOURCES += DelayedSaccadeTask.cpp
