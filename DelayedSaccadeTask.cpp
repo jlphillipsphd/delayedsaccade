@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
             cout << "Starting State: " << state_string << "\n";
         }
 
-        WM.initializeEpisode(state_string);
+        //WM.initializeEpisode(state_string);
 
         if (DSTDebug){
             cout << "Episode Initialized!\n";
@@ -183,12 +183,8 @@ int main(int argc, char *argv[]) {
 		// Loop until the episode is completed
 		while (current_state.arrival_time < 0) {
 
-            // Clear the candidate chunks vector
-            candidate_chunks.clear();
-
 			// Grab the current episode time from the WM clock.
-			//current_state.time_step = WM.getEpisodeTime();
-            current_state.time_step++;
+			//current_state.time_step = WM.getEpisodeTime;
 
 			// Change the state data structure to reflect the current state of
 			// the environment.
@@ -313,13 +309,7 @@ int main(int argc, char *argv[]) {
 			// looking at a location relevant to memory
 			// (looking_where_something_was).
 			for (x = 0; x < WM.workingMemorySlots(); x++) {
-                if (DSTDebug) {
-                    cout << "About to query WM Slot " << x << "\n";
-                }
 				chunk = WM.queryWorkingMemory(x);
-                if (DSTDebug) {
-                    cout << "Queried WM Slot " << x << "\n";
-                }
 				if (chunk == "fixate") {
 					in_store = true;
 					break;
@@ -416,13 +406,7 @@ int main(int argc, char *argv[]) {
 			// in working memory. We don't need to provide a duplicate.
 			in_store = false;
 			for (x = 0; x < WM.workingMemorySlots(); x++) {
-                if (DSTDebug) {
-                    cout << "About to query WM Slot " << x << "\n";
-                }
 				chunk = WM.queryWorkingMemory(x);
-                if (DSTDebug) {
-                    cout << "Queried WM Slot " << x << "\n";
-                }
 				//if (chunk.getType() == "ITEM" && ((item_data*)
 				//chunk.getData())->thing == TARGET) {
                 if (chunk == "up" |
@@ -485,10 +469,11 @@ int main(int argc, char *argv[]) {
                 state_string = "I";
             }
 
-            WM.step(state_string);
+            //WM.step(state_string);
 
 			// NOTE: At this point the WM object has removed all chunks from
 			// the candidate_chunks list.
+            candidate_chunks.clear();
 
 			//////////////////////////////////////////////////
 			// Act on the environment based on working memory.
@@ -769,12 +754,15 @@ int main(int argc, char *argv[]) {
          	if (current_state.trial_ok) {
          		// Reward: Provided -> 1
          		current_state.success = true;
-         		reward = 20.0;
+         		reward = 1;//20.0;
          	}
+
+            // Update current time step
+            current_state.time_step++;
 
 		}  // while ...
 
-        WM.absorbReward("I", reward);
+        //WM.absorbReward("I", reward);
 
 		// Output the trial number
 		cout << trial << " ";
