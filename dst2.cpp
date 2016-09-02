@@ -92,12 +92,16 @@ int main (int argc, char* argv[]) {
 
         // Initailize the episode
         generateTrial(currentEpisode, currentState);
+
         // Get the string representation of the initial state
         string stateString = constructStateString(currentState);
 
         if (DSTDebug) {
             cout << "Initial state: " << stateString << "\n";
         }
+
+        // Call hte erward function to determine how the agent is performing
+        reward = rewardFunction(currentEpisode, currentState);
 
         WM.initializeEpisode(stateString, 0.0);
 
@@ -116,8 +120,12 @@ int main (int argc, char* argv[]) {
                 cout << "State: " << stateString << "\n";
             }
 
+            // Call hte erward function to determine how the agent is performing
+            reward = rewardFunction(currentEpisode, currentState);
+
             // Provide the current state to Working Memory
             WM.step(stateString, 0.0);
+
 
             if (DSTDebug) {
                 WM.printWMContents();
@@ -129,11 +137,11 @@ int main (int argc, char* argv[]) {
 
             chooseAndPerformAction(WM, currentState);
 
-            // Call hte erward function to determine how the agent is performing
-            reward = rewardFunction(currentEpisode, currentState);
-
             currentState.timeStep++;
         }
+
+        // Call hte erward function to determine how the agent is performing
+        reward = rewardFunction(currentEpisode, currentState);
 
         // Absorb the reward from the episode
         stateString = constructStateString(currentState);
