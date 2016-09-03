@@ -39,14 +39,25 @@
 
 using namespace std;
 
+bool DSTDebug = false;
+
 // The main function for the program. This is the function that actually
 // performs the simulation.
 int main(int argc, char *argv[]) {
 
-    bool DSTDebug = false;
-    if (argc > 1 && argv[1] == (string) "debug") {
+	int number_of_trials = 10000;	// Maximum number of trials before giving
+									// up on the task.
+
+    if (argc > 2 && argv[1] == (string) "debug") {
         DSTDebug = true;
+        number_of_trials = atoi(argv[2]);
+    } else if (argc > 1 && argv[1] == (string) "debug") {
+        DSTDebug = true;
+    } else if (argc > 1) {
+        number_of_trials = atoi(argv[1]);
     }
+
+    cout << "# trials: " << number_of_trials << "\n";
 
     cout << "Debug Mode: " << ((DSTDebug) ? "On\n" : "Off\n");
 
@@ -54,10 +65,6 @@ int main(int argc, char *argv[]) {
 										// decimal. Once this percentage of the
 										// last window_size episodes were
 										// completed successfully, then we quit.
-
-	int number_of_trials = 10000;	// Maximum number of trials before giving
-									// up on the task.
-
 
 
 	// Variables to calculate how well the agent is doing by analyzing the
@@ -170,7 +177,44 @@ int main(int argc, char *argv[]) {
             cout << "Starting State: " << state_string << "\n";
         }
 
-        //WM.initializeEpisode(state_string);
+        /**
+         *  Here is where we check our progress to see if we are
+         *   performing the task correctly
+         */
+
+        if (current_state.time_step > current_state.cross_on_time &&
+        current_state.time_step <= current_state.cross_off_time &&
+        current_state.position != MIDDLE) {
+            // Broke the fixation rule!
+            current_state.trial_ok = false;
+        }
+        if (current_state.time_step == current_state.cross_off_time + 1 &&
+        current_state.position != current_state.target_position) {
+            // Broke the move rule!
+            current_state.trial_ok = false;
+        }
+        if (current_state.time_step == current_state.cross_off_time + 1 &&
+        current_state.position == current_state.target_position) {
+            // Moved to correct location!
+            current_state.arrival_time = current_state.time_step;
+        }
+        if (current_state.time_step > current_state.cross_off_time + 1) {
+            // Broke the time-out rule!
+            current_state.arrival_time = current_state.time_step;
+            current_state.trial_ok = false;
+        }
+
+        if (current_state.arrival_time < 0) {
+            // Reward: Provided -> 0
+            reward = 0.0;
+        }
+        if (current_state.trial_ok) {
+            // Reward: Provided -> 1
+            current_state.success = true;
+            reward = 1;//20.0;
+        }
+
+        WM.initializeEpisode(state_string);
 
         if (DSTDebug){
             cout << "Episode Initialized!\n";
@@ -469,7 +513,44 @@ int main(int argc, char *argv[]) {
                 state_string = "I";
             }
 
-            //WM.step(state_string);
+            /**
+             *  Here is where we check our progress to see if we are
+             *   performing the task correctly
+             */
+
+            if (current_state.time_step > current_state.cross_on_time &&
+         	current_state.time_step <= current_state.cross_off_time &&
+         	current_state.position != MIDDLE) {
+         		// Broke the fixation rule!
+         		current_state.trial_ok = false;
+         	}
+         	if (current_state.time_step == current_state.cross_off_time + 1 &&
+         	current_state.position != current_state.target_position) {
+         		// Broke the move rule!
+         		current_state.trial_ok = false;
+         	}
+         	if (current_state.time_step == current_state.cross_off_time + 1 &&
+         	current_state.position == current_state.target_position) {
+         		// Moved to correct location!
+         		current_state.arrival_time = current_state.time_step;
+         	}
+         	if (current_state.time_step > current_state.cross_off_time + 1) {
+         		// Broke the time-out rule!
+         		current_state.arrival_time = current_state.time_step;
+         		current_state.trial_ok = false;
+         	}
+
+         	if (current_state.arrival_time < 0) {
+         		// Reward: Provided -> 0
+         		reward = 0.0;
+         	}
+         	if (current_state.trial_ok) {
+         		// Reward: Provided -> 1
+         		current_state.success = true;
+         		reward = 1;//20.0;
+         	}
+
+            WM.step(state_string);
 
 			// NOTE: At this point the WM object has removed all chunks from
 			// the candidate_chunks list.
@@ -720,49 +801,51 @@ int main(int argc, char *argv[]) {
 			  break;
 			}
 
-            /**
-             *  Here is where we check our progress to see if we are
-             *   performing the task correctly
-             */
 
-            if (current_state.time_step > current_state.cross_on_time &&
-         	current_state.time_step <= current_state.cross_off_time &&
-         	current_state.position != MIDDLE) {
-         		// Broke the fixation rule!
-         		current_state.trial_ok = false;
-         	}
-         	if (current_state.time_step == current_state.cross_off_time + 1 &&
-         	current_state.position != current_state.target_position) {
-         		// Broke the move rule!
-         		current_state.trial_ok = false;
-         	}
-         	if (current_state.time_step == current_state.cross_off_time + 1 &&
-         	current_state.position == current_state.target_position) {
-         		// Moved to correct location!
-         		current_state.arrival_time = current_state.time_step;
-         	}
-         	if (current_state.time_step > current_state.cross_off_time + 1) {
-         		// Broke the time-out rule!
-         		current_state.arrival_time = current_state.time_step;
-         		current_state.trial_ok = false;
-         	}
-
-         	if (current_state.arrival_time < 0) {
-         		// Reward: Provided -> 0
-         		reward = 0.0;
-         	}
-         	if (current_state.trial_ok) {
-         		// Reward: Provided -> 1
-         		current_state.success = true;
-         		reward = 1;//20.0;
-         	}
 
             // Update current time step
             current_state.time_step++;
 
 		}  // while ...
 
-        //WM.absorbReward("I", reward);
+        /**
+         *  Here is where we check our progress to see if we are
+         *   performing the task correctly
+         */
+
+        if (current_state.time_step > current_state.cross_on_time &&
+        current_state.time_step <= current_state.cross_off_time &&
+        current_state.position != MIDDLE) {
+            // Broke the fixation rule!
+            current_state.trial_ok = false;
+        }
+        if (current_state.time_step == current_state.cross_off_time + 1 &&
+        current_state.position != current_state.target_position) {
+            // Broke the move rule!
+            current_state.trial_ok = false;
+        }
+        if (current_state.time_step == current_state.cross_off_time + 1 &&
+        current_state.position == current_state.target_position) {
+            // Moved to correct location!
+            current_state.arrival_time = current_state.time_step;
+        }
+        if (current_state.time_step > current_state.cross_off_time + 1) {
+            // Broke the time-out rule!
+            current_state.arrival_time = current_state.time_step;
+            current_state.trial_ok = false;
+        }
+
+        if (current_state.arrival_time < 0) {
+            // Reward: Provided -> 0
+            reward = 0.0;
+        }
+        if (current_state.trial_ok) {
+            // Reward: Provided -> 1
+            current_state.success = true;
+            reward = 1;//20.0;
+        }
+
+        WM.absorbReward("I", reward);
 
 		// Output the trial number
 		cout << trial << " ";

@@ -11,21 +11,25 @@ bool DSTDebug = false;
 
 int main (int argc, char* argv[]) {
 
-    if (argc > 1 && argv[1] == (string) "debug") {
+	int number_of_trials = 10000;	// Maximum number of trials before giving
+									// up on the task.
+
+    if (argc > 2 && argv[1] == (string) "debug") {
         DSTDebug = true;
+        number_of_trials = atoi(argv[2]);
+    } else if (argc > 1 && argv[1] == (string) "debug") {
+        DSTDebug = true;
+    } else if (argc > 1) {
+        number_of_trials = atoi(argv[1]);
     }
 
+    cout << "# trials: " << number_of_trials << "\n";
     cout << "Debug Mode: " << ((DSTDebug) ? "On\n" : "Off\n");
 
 	double finished_percentage = 0.98;	// Not really a percentage, more like a
 										// decimal. Once this percentage of the
 										// last window_size episodes were
 										// completed successfully, then we quit.
-
-	int number_of_trials = 10000;	// Maximum number of trials before giving
-									// up on the task.
-
-
 
 	// Variables to calculate how well the agent is doing by analyzing the
 	// last window_size episodes.
@@ -59,9 +63,9 @@ int main (int argc, char* argv[]) {
     // Initialize Random Number Generators
     time_t random_seed = time(NULL);
 
-    srand(random_seed);
-
     cerr << "Random Seed:  " << random_seed << "\n";
+
+    srand(random_seed);
 
     // The episode and state data structures for the task
     Episode currentEpisode;
@@ -93,8 +97,11 @@ int main (int argc, char* argv[]) {
         // Initailize the episode
         generateTrial(currentEpisode, currentState);
 
+        // Determine if there is anything to fixate upon
+        checkFixation(WM, currentState);
+
         // Get the string representation of the initial state
-        string stateString = constructStateString(currentState);
+        string stateString = constructStateString(WM, currentState);
 
         if (DSTDebug) {
             cout << "Initial state: " << stateString << "\n";
@@ -103,7 +110,7 @@ int main (int argc, char* argv[]) {
         // Call hte erward function to determine how the agent is performing
         reward = rewardFunction(currentEpisode, currentState);
 
-        WM.initializeEpisode(stateString, 0.0);
+        WM.initializeEpisode(stateString, reward);
 
         // Main loop of the episode
         while (currentEpisode.arrivalTime < 0) {
@@ -114,18 +121,17 @@ int main (int argc, char* argv[]) {
             checkFixation(WM, currentState);
 
             // Get the string representation of the current state
-            stateString = constructStateString(currentState);
+            stateString = constructStateString(WM, currentState);
 
             if (DSTDebug) {
                 cout << "State: " << stateString << "\n";
             }
 
-            // Call hte erward function to determine how the agent is performing
+            // Call the reward function to determine how the agent is performing
             reward = rewardFunction(currentEpisode, currentState);
 
             // Provide the current state to Working Memory
-            WM.step(stateString, 0.0);
-
+            WM.step(stateString, reward);
 
             if (DSTDebug) {
                 WM.printWMContents();
@@ -140,11 +146,11 @@ int main (int argc, char* argv[]) {
             currentState.timeStep++;
         }
 
-        // Call hte erward function to determine how the agent is performing
+        // Call the reward function to determine how the agent is performing
         reward = rewardFunction(currentEpisode, currentState);
 
         // Absorb the reward from the episode
-        stateString = constructStateString(currentState);
+        stateString = constructStateString(WM, currentState);
         WM.absorbReward(stateString, reward);
 
 		// Output the trial number
@@ -237,33 +243,73 @@ void updateState(Episode& episode ,State& state) {
     }
 }
 
-string constructStateString(State& state) {
 
+string constructStateString(WorkingMemory& WM, State& state) {
+    bool inStore = false;
     vector<string> stateConcepts;
 
     // Add target location to state concept list,
-    // if target is present
+    // if target is present and is not already in memory
+    string targetString = "EMPTY";
     switch (state.targetLocation) {
     case Up:
-        stateConcepts.push_back("up");
+        targetString = "up";
         break;
     case Down:
-        stateConcepts.push_back("down");
+        targetString = "down";
         break;
     case Left:
-        stateConcepts.push_back("left");
+        targetString = "left";
         break;
     case Right:
-        stateConcepts.push_back("right");
+        targetString = "right";
         break;
     default:
         break;
     }
 
+    if (targetString != "EMPTY") {
+        // Check to see if there is already a chunk for the target
+        // in working memory. We don't need to provide a duplicate
+        inStore = false;
+        for (int i = 0; i < WM.workingMemorySlots(); i++) {
+            string chunk = WM.queryWorkingMemory(i);
+            if (chunk == "up" ||
+                chunk == "down" ||
+                chunk == "left" ||
+                chunk == "right" ) {
+
+                inStore = true;
+                break;
+            }
+        }
+
+        // If it wasn't in working memory, then add cross to the
+        // state concept list
+        if (!inStore) {
+            stateConcepts.push_back("target");
+        }
+    }
+
     // Add cross to state concept if it is present
     // In the current test, cross can only be in center
     if (state.crossLocation == Center) {
-        stateConcepts.push_back("cross");
+        // Check to see if there is already a chunk for the cross
+        // in working memory. We don't need to provide a duplicate
+        inStore = false;
+        for (int i = 0; i < WM.workingMemorySlots(); i++) {
+            string chunk = WM.queryWorkingMemory(i);
+            if (chunk == "cross") {
+                inStore = true;
+                break;
+            }
+        }
+
+        // If it wasn't in working memory, then add cross to the
+        // state concept list
+        if (!inStore) {
+            stateConcepts.push_back("cross");
+        }
     }
 
     // If agent is fixating, then add fixate to
@@ -299,8 +345,8 @@ void checkFixation(WorkingMemory& WM, State& state) {
                                             // some chunk in working
                                             // memory.
 
-    // Determine if the agent is lookign at something
-    if (state.gaze == state.targetLocation || state.gaze == state.crossLocation) {
+    // Determine if the agent is looking at something
+    if (state.gaze != Nowhere && (state.gaze == state.targetLocation || state.gaze == state.crossLocation) ) {
         lookingAtSomething = true;
     }
 
@@ -312,15 +358,13 @@ void checkFixation(WorkingMemory& WM, State& state) {
         if (chunk == "fixate") {
             inStore = true;
             break;
-        } else {
-            if ( (chunk == "cross" && state.gaze == Center) |
-                 (chunk == "up" && state.gaze == Up) |
-                 (chunk == "down" && state.gaze == Down) |
-                 (chunk == "left" && state.gaze == Left) |
-                 (chunk == "right" && state.gaze == Right) ) {
+        } else if ( (chunk == "cross" && state.gaze == Center) ||
+                    (chunk == "up" && state.gaze == Up) ||
+                    (chunk == "down" && state.gaze == Down) ||
+                    (chunk == "left" && state.gaze == Left) ||
+                    (chunk == "right" && state.gaze == Right) ) {
 
-                lookingWhereSomethingWas = true;
-            }
+            lookingWhereSomethingWas = true;
         }
     }
 
@@ -329,6 +373,8 @@ void checkFixation(WorkingMemory& WM, State& state) {
     // supply the working memory system with the option to fixate.
     if (!inStore && (lookingAtSomething || lookingWhereSomethingWas)) {
         state.fixating = true;
+    } else {
+        state.fixating = false;
     }
 }
 
@@ -467,7 +513,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
     // look where it was.
     // However, very rarely we fail to do this.
     else if (rememberedTarget != Nowhere) {
-        if (rand()%2 == 0) {
+        if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
             state.gaze = rememberedTarget;
@@ -477,7 +523,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
     // look where it was.
     // However, very rarely we fail to do this.
     else if (rememberedCross != Nowhere) {
-        if (rand()%2 == 0) {
+        if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
             state.gaze = rememberedCross;

@@ -58,7 +58,7 @@ struct State {
 
 void generateTrial(Episode& currentEpisode, State& currentState);
 void updateState(Episode& episode ,State& state);
-string constructStateString(State& state);
+string constructStateString(WorkingMemory& WM, State& state);
 void checkFixation(WorkingMemory& WM, State& state);
 void chooseAndPerformAction(WorkingMemory& WM, State& state);
 double rewardFunction(Episode& episode, State& state);
