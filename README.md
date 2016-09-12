@@ -1,23 +1,25 @@
-DelayedSaccade - WITHOUT QT GUI
+DelayedSaccade - With HRRs
 ==============
 
-Delayed Saccade Task (Qt Demo)
-Demo Application for the Working Memory Toolkit
+Delayed Saccade Task
+Demo Application for the Holographic Working Memory Toolkit
 
 ************
 Requirements
 ************
 
-Uses the qmake tool, part of QT, but none of the
-QT libraries...
+Uses the *hrr* branch of the delayedsaccade repository, and the *jlp* branch of the wmtk repository
 
 ****************************************************
 Basic Installation for most flavors of Unix (Linux):
 ****************************************************
 
+git checkout hrr
+cd wmtk
 git submodule init
 git submodule update
-qmake
+git checkout jlp
+cd ..
 make
 
 *****
