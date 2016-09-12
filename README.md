@@ -8,7 +8,7 @@ Demo Application for the Holographic Working Memory Toolkit
 Requirements
 ************
 
-Uses the *hrr* branch of the delayedsaccade repository, and the *jlp* branch of the wmtk repository
+Uses the **hrr** branch of the delayedsaccade repository, and the **jlp** branch of the wmtk repository
 
 ****************************************************
 Basic Installation for most flavors of Unix (Linux):
