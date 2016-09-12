@@ -15,11 +15,17 @@ Basic Installation for most flavors of Unix (Linux):
 ****************************************************
 
 git checkout hrr
+
 cd wmtk
+
 git submodule init
+
 git submodule update
+
 git checkout jlp
+
 cd ..
+
 make
 
 *****
