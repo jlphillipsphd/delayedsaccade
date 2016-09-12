@@ -134,7 +134,10 @@ int main (int argc, char* argv[]) {
             WM.step(stateString, reward);
 
             if (DSTDebug) {
-                WM.printWMContents();
+                for (int i = 0; i < WM.workingMemorySlots() - 1; i++) {
+                    cout << WM.queryWorkingMemory(i) << " | ";
+                }
+                cout << WM.queryWorkingMemory(WM.workingMemorySlots() - 1) << "\n";
             }
 
             //////////////////////////////////////////////////
