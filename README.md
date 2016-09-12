@@ -32,4 +32,4 @@ make
 Usage
 *****
 
-Just run the executable: ./DelayedSaccadeTask
+Just run the executable: ./DelayedSaccadeTask.exe OR ./dst2.exe
