@@ -11,8 +11,8 @@ bool DSTDebug = false;
 
 int main (int argc, char* argv[]) {
 
-	int number_of_trials = 10000;	// Maximum number of trials before giving
-									// up on the task.
+    int number_of_trials = 10000;	// Maximum number of trials before giving
+					// up on the task.
 
     if (argc > 2 && argv[1] == (string) "debug") {
         DSTDebug = true;
@@ -26,39 +26,40 @@ int main (int argc, char* argv[]) {
     cout << "# trials: " << number_of_trials << "\n";
     cout << "Debug Mode: " << ((DSTDebug) ? "On\n" : "Off\n");
 
-	double finished_percentage = 0.98;	// Not really a percentage, more like a
-										// decimal. Once this percentage of the
-										// last window_size episodes were
-										// completed successfully, then we quit.
+    double finished_percentage = 0.98;	// Not really a percentage, more like a
+					// decimal. Once this percentage of the
+					// last window_size episodes were
+					// completed successfully, then we quit.
 
-	// Variables to calculate how well the agent is doing by analyzing the
-	// last window_size episodes.
-	int window_size = 20;					// Number of episodes to process.
-	double goodness = 0.0;					// Fraction of successful trials.
-	int goodness_index = 0;					// Indexing variable.
-	int window[window_size];				// Stores the results of the last
-											// window_size episodes
-	int q;									// Counter exclusively used to
-											// perform "goodness" calculations.
-	// Initialize the window.
-	for (q = 0; q < window_size; q++) {
-		window[q] = 0;
+    // Variables to calculate how well the agent is doing by analyzing the
+    // last window_size episodes.
+    int window_size = 20;		// Number of episodes to process.
+    double goodness = 0.0;		// Fraction of successful trials.
+    int goodness_index = 0;		// Indexing variable.
+
+    int window[window_size];		// Stores the results of the last
+    					// window_size episodes.
+
+    int q;				// Counter exclusively used to
+				    	// perform "goodness" calculations.
+
+    // Initialize the window.
+    for (q = 0; q < window_size; q++) {
+    	window[q] = 0;
     }
 
     int x;	// Local counter
 
     int wm_size = 3;						// Working memory size.
-    //int state_feature_vector_size = 15; 	// State vector size.
-    //int chunk_feature_vector_size = 3;		// Chunk vector size.
-    int vector_size = 64;                   // Size of HRRs
+    int vector_size = 64;                                       // Size of HRRs
 
     double lrate = 0.01; 					// Learning rate of the network.
     double lambda = 0.7;					// Past responsibility parameter.
     double ngamma = 0.99;					// Reward discounting parameter.
-    double exploration_percentage = 0.05;	// The percentage of the time that
-                                            // the WM does something different
-                                            // from what it thinks it should
-                                            // (to encourage exploration.)
+    double exploration_percentage = 0.05;	                // The percentage of the time that
+                                                                // the WM does something different
+                                                                // from what it thinks it should
+                                                                // (to encourage exploration.)
 
     // Initialize Random Number Generators
     time_t random_seed = time(NULL);
@@ -75,7 +76,7 @@ int main (int argc, char* argv[]) {
     double reward = 0.0;
 
     // Instantiate the Working Memory System.
-	WorkingMemory WM(lrate,
+    WorkingMemory WM(lrate,
                      ngamma,
                      lambda,
                      exploration_percentage,
@@ -87,8 +88,11 @@ int main (int argc, char* argv[]) {
     // A single chunk
     string chunk;
 
+    // Strings to represent current and previous states
+    string previousState = "";
+
     // Loop for the specified number of episodes
-	for (int trial = 0; trial < number_of_trials; trial++) {
+    for (int trial = 0; trial < number_of_trials; trial++) {
 
         if (DSTDebug) {
             cout << "Start of episode " << trial << "!\n";
@@ -110,7 +114,7 @@ int main (int argc, char* argv[]) {
         // Call hte erward function to determine how the agent is performing
         reward = rewardFunction(currentEpisode, currentState);
 
-        WM.initializeEpisode(stateString, reward);
+        WM.initializeEpisode(stateString, 0.0);
 
         // Main loop of the episode
         while (currentEpisode.arrivalTime < 0) {
@@ -127,19 +131,25 @@ int main (int argc, char* argv[]) {
                 cout << "State: " << stateString << "\n";
             }
 
+            // Provide the current state to Working Memory,
+            // unless it is the same as in the previous step
+            //if (stateString != previousState) {
+                WM.step(stateString, 0.0);
+            //}
+
+            // Set the previous state to the current state
+            previousState = stateString;
+
             // Call the reward function to determine how the agent is performing
             reward = rewardFunction(currentEpisode, currentState);
-
-            // Provide the current state to Working Memory
-            WM.step(stateString, reward);
 
             if (DSTDebug) {
                 WM.printWMContents();
             }
 
-            //////////////////////////////////////////////////
-			// Act on the environment based on working memory.
-			//////////////////////////////////////////////////
+            /////////////////////////////////////////////////////
+	    // Act on the environment based on working memory. //
+	    /////////////////////////////////////////////////////
 
             chooseAndPerformAction(WM, currentState);
 
@@ -153,8 +163,8 @@ int main (int argc, char* argv[]) {
         stateString = constructStateString(WM, currentState);
         WM.absorbReward(stateString, reward);
 
-		// Output the trial number
-		cout << trial << " ";
+	// Output the trial number
+	cout << trial << " ";
 
         // Calculate the goodness so far
         if (currentEpisode.success) {
@@ -214,8 +224,8 @@ void generateTrial(Episode& currentEpisode, State& currentState) {
     currentState.timeStep = 0;
 }
 
-// Change the state data t orefelc tthe current staet fo the environment
-void updateState(Episode& episode ,State& state) {
+// Change the state data to reflect the current state of the environment
+void updateState(Episode& episode, State& state) {
 
     if (episode.crossOnTime == state.timeStep) {
         state.crossLocation = Center;
@@ -271,23 +281,21 @@ string constructStateString(WorkingMemory& WM, State& state) {
     if (targetString != "EMPTY") {
         // Check to see if there is already a chunk for the target
         // in working memory. We don't need to provide a duplicate
+        string chunk = "";
         inStore = false;
         for (int i = 0; i < WM.workingMemorySlots(); i++) {
-            string chunk = WM.queryWorkingMemory(i);
-            if (chunk == "up" ||
-                chunk == "down" ||
-                chunk == "left" ||
-                chunk == "right" ) {
+            chunk = WM.queryWorkingMemory(i);
+            if (chunk == targetString) {
 
                 inStore = true;
                 break;
             }
         }
 
-        // If it wasn't in working memory, then add cross to the
+        // If it wasn't in working memory, then add target location to the
         // state concept list
         if (!inStore) {
-            stateConcepts.push_back("target");
+            stateConcepts.push_back(targetString);
         }
     }
 
@@ -445,10 +453,10 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
         }
     }
 
-    /////////////////////////////////////////////////////////
-    // Select actions based on memory or default to automatic
-    // processes.
-    /////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // Select actions based on memory or default to automatic //
+    // processes.                                             //
+    ///////////////////////////////////////////////////////////
 
     // If we are trying to fixate and it makes sense then do it.
     // However, very rarely we fail to do this.
@@ -459,8 +467,8 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
             state.gaze = state.gaze;
         }
     }
-    // If we remember both and both are on the screen thne we choose
-    // equally between them nad look at one.
+    // If we remember both and both are on the screen then we choose
+    // equally between them and look at one.
     // However, very rarely we fail to do this.
     else if (rememberedCross != Nowhere && state.crossLocation != Nowhere &&
              rememberedTarget != Nowhere && state.targetLocation != Nowhere) {
@@ -482,57 +490,59 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
         if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
-            state.gaze = rememberedTarget;
+            state.gaze = state.targetLocation;
         }
     }
     // If we remember just the cross and it is on the screen, we look
     // at it.
     // However, very rarely we fail to do this
-    else if (rememberedCross != Nowhere && rememberedTarget != Nowhere) {
+    else if (rememberedCross != Nowhere && state.crossLocation != Nowhere) {
         if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
-            state.gaze = rememberedCross;
+            state.gaze = state.crossLocation;
         }
     }
     // If we remember both, but neither are on the screen, we look
     // where one was, equally choosing between the two.
     // However, very rarely we fail to do this.
-    else if (rememberedTarget != Nowhere && rememberedCross != Nowhere) {
+    else if (rememberedTarget != Nowhere && rememberedCross != Nowhere &&
+             state.targetLocation == Nowhere && state.crossLocation == Nowhere) {
         if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
             if (rand()%2 == 0) {
-                state.gaze = rememberedCross;
+                state.gaze = state.crossLocation;
             } else {
-                state.gaze = rememberedTarget;
+                state.gaze = state.targetLocation;
             }
         }
     }
-    // If we only remember the targte and it is not on the screen, we
+    // If we only remember the target and it is not on the screen, we
     // look where it was.
     // However, very rarely we fail to do this.
-    else if (rememberedTarget != Nowhere) {
+    else if (rememberedTarget != Nowhere && state.targetLocation == Nowhere) {
         if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
-            state.gaze = rememberedTarget;
+            state.gaze = state.targetLocation;
         }
     }
     // If we only remember the cross and it is not on the screen, we
     // look where it was.
     // However, very rarely we fail to do this.
-    else if (rememberedCross != Nowhere) {
+    else if (rememberedCross != Nowhere && state.crossLocation == Nowhere) {
         if (rand()%1000 == 0) {
             state.gaze = randomGaze;
         } else {
-            state.gaze = rememberedCross;
+            state.gaze = state.crossLocation;
         }
     }
     // If both are on the screen, but we don't remember them, then
     // we choose to look at either with equal probability.
     // However, occasionally we fail to do this.
-    else if (state.crossLocation != Nowhere && state.targetLocation != Nowhere) {
+    else if (state.crossLocation != Nowhere && state.targetLocation != Nowhere &&
+             rememberedCross == Nowhere && rememberedTarget == Nowhere) {
         if (rand()%10 == 0) {
             state.gaze = randomGaze;
         } else {
@@ -547,7 +557,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
     // kept this for completeness) by itself and we don't remember ti,
     // then we look at it.
     // However, occasionally we fail to do this.
-    else if (state.targetLocation != Nowhere) {
+    else if (state.targetLocation != Nowhere && rememberedTarget == Nowhere) {
         if (rand()%10 == 0) {
             state.gaze = randomGaze;
         } else {
@@ -557,7 +567,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
     // If the cross is on the screen by itself and we don't remember
     // it, then we look at it.
     // However, occasionally we fail to do this.
-    else if (state.crossLocation != Nowhere) {
+    else if (state.crossLocation != Nowhere && rememberedCross == Nowhere) {
         if (rand()%10 == 0) {
             state.gaze = randomGaze;
         } else {
@@ -602,8 +612,16 @@ double rewardFunction(Episode& episode, State& state) {
         return 0.0;
     }
     if (episode.trialOK) {
-        // Reward: Provided -> 1
+
+        if (DSTDebug) {
+            cout << "Success!\tSteps: " << state.timeStep << "\n";
+        }
+
+        // Reward: Provided -> 20
         episode.success = true;
         return 20.0;
     }
+
+    // Reward: Defaulted -> 0
+    return 0.0;
 }
