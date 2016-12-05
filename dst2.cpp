@@ -59,10 +59,10 @@ int main (int argc, char* argv[]) {
     int wm_size = 3;						// Working memory size.
     int vector_size = 64;					// Size of HRRs
 
-    double lrate = 0.01; 					// Learning rate of the network.
-    double lambda = 0.7;					// Past responsibility parameter.
+    double lrate = 0.001; 					// Learning rate of the network.
+    double lambda = 0.1;					// Past responsibility parameter.
     double ngamma = 0.99;					// Reward discounting parameter.
-    double exploration_percentage = 0.05;	// The percentage of the time that
+    double exploration_percentage = 0.01;	// The percentage of the time that
 											// the WM does something different
 											// from what it thinks it should
 											// (to encourage exploration.)
