@@ -453,9 +453,9 @@ int main(int argc, char *argv[]) {
 				chunk = WM.queryWorkingMemory(x);
 				//if (chunk.getType() == "ITEM" && ((item_data*)
 				//chunk.getData())->thing == TARGET) {
-                if (chunk == "up" |
-                    chunk == "down" |
-                    chunk == "left" |
+                if (chunk == "up" ||
+                    chunk == "down" ||
+                    chunk == "left" ||
                     chunk == "right" ) {
 
 					in_store = true;
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
          		reward = 1;//20.0;
          	}
 
-            WM.step(state_string);
+           // WM.step(state_string);
 
 			// NOTE: At this point the WM object has removed all chunks from
 			// the candidate_chunks list.
@@ -845,7 +845,7 @@ int main(int argc, char *argv[]) {
             reward = 1;//20.0;
         }
 
-        WM.absorbReward("I", reward);
+        WM.step(state_string, reward);
 
 		// Output the trial number
 		cout << trial << " ";

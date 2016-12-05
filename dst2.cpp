@@ -12,24 +12,30 @@ bool DSTDebug = false;
 int main (int argc, char* argv[]) {
 
     int number_of_trials = 10000;	// Maximum number of trials before giving
-					// up on the task.
+									// up on the task.
+
+    // Initialize Random Number Generators
+    time_t random_seed = time(NULL);
 
     if (argc > 2 && argv[1] == (string) "debug") {
         DSTDebug = true;
         number_of_trials = atoi(argv[2]);
     } else if (argc > 1 && argv[1] == (string) "debug") {
         DSTDebug = true;
+	} else if (argc > 2) {
+		random_seed = atoi(argv[1]);
+        number_of_trials = atoi(argv[2]);
     } else if (argc > 1) {
-        number_of_trials = atoi(argv[1]);
-    }
+		random_seed = atoi(argv[1]);
+	}
 
     cout << "# trials: " << number_of_trials << "\n";
     cout << "Debug Mode: " << ((DSTDebug) ? "On\n" : "Off\n");
 
     double finished_percentage = 0.98;	// Not really a percentage, more like a
-					// decimal. Once this percentage of the
-					// last window_size episodes were
-					// completed successfully, then we quit.
+										// decimal. Once this percentage of the
+										// last window_size episodes were
+										// completed successfully, then we quit.
 
     // Variables to calculate how well the agent is doing by analyzing the
     // last window_size episodes.
@@ -38,7 +44,7 @@ int main (int argc, char* argv[]) {
     int goodness_index = 0;		// Indexing variable.
 
     int window[window_size];		// Stores the results of the last
-    					// window_size episodes.
+			    					// window_size episodes.
 
     int q;				// Counter exclusively used to
 				    	// perform "goodness" calculations.
@@ -51,18 +57,15 @@ int main (int argc, char* argv[]) {
     int x;	// Local counter
 
     int wm_size = 3;						// Working memory size.
-    int vector_size = 64;                                       // Size of HRRs
+    int vector_size = 64;					// Size of HRRs
 
     double lrate = 0.01; 					// Learning rate of the network.
     double lambda = 0.7;					// Past responsibility parameter.
     double ngamma = 0.99;					// Reward discounting parameter.
-    double exploration_percentage = 0.05;	                // The percentage of the time that
-                                                                // the WM does something different
-                                                                // from what it thinks it should
-                                                                // (to encourage exploration.)
-
-    // Initialize Random Number Generators
-    time_t random_seed = time(NULL);
+    double exploration_percentage = 0.05;	// The percentage of the time that
+											// the WM does something different
+											// from what it thinks it should
+											// (to encourage exploration.)
 
     cerr << "Random Seed:  " << random_seed << "\n";
 
@@ -92,7 +95,7 @@ int main (int argc, char* argv[]) {
     string previousState = "";
 
     // Loop for the specified number of episodes
-    for (int trial = 0; trial < number_of_trials; trial++) {
+    for (int trial = 0; trial <= number_of_trials; trial++) {
 
         if (DSTDebug) {
             cout << "Start of episode " << trial << "!\n";
@@ -111,7 +114,7 @@ int main (int argc, char* argv[]) {
             cout << "Initial state: " << stateString << "\n";
         }
 
-        // Call hte erward function to determine how the agent is performing
+        // Call the reward function to determine how the agent is performing
         reward = rewardFunction(currentEpisode, currentState);
 
         WM.initializeEpisode(stateString, 0.0);
@@ -133,9 +136,9 @@ int main (int argc, char* argv[]) {
 
             // Provide the current state to Working Memory,
             // unless it is the same as in the previous step
-            //if (stateString != previousState) {
+            if (stateString != previousState) {
                 WM.step(stateString, 0.0);
-            //}
+            }
 
             // Set the previous state to the current state
             previousState = stateString;
@@ -151,8 +154,8 @@ int main (int argc, char* argv[]) {
             }
 
             /////////////////////////////////////////////////////
-	    // Act on the environment based on working memory. //
-	    /////////////////////////////////////////////////////
+		    // Act on the environment based on working memory. //
+		    /////////////////////////////////////////////////////
 
             chooseAndPerformAction(WM, currentState);
 
@@ -368,7 +371,6 @@ void checkFixation(WorkingMemory& WM, State& state) {
         string chunk = WM.queryWorkingMemory(i);
         if (chunk == "fixate") {
             inStore = true;
-            break;
         } else if ( (chunk == "cross" && state.gaze == Center) ||
                     (chunk == "up" && state.gaze == Up) ||
                     (chunk == "down" && state.gaze == Down) ||
@@ -416,7 +418,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
                                             // and in what location.
 
     // Determine if the agent is looking at something
-    if (state.gaze == state.targetLocation || state.gaze == state.crossLocation) {
+    if (state.gaze != Nowhere && (state.gaze == state.targetLocation || state.gaze == state.crossLocation)) {
         lookingAtSomething = true;
     }
 
@@ -427,7 +429,6 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
         string chunk = WM.queryWorkingMemory(i);
         if (chunk == "fixate") {
             state.fixating = true;
-            break;
         } else if (chunk == "cross") {
             rememberedCross = Center;
             if (state.gaze == Center) {
@@ -557,7 +558,7 @@ void chooseAndPerformAction(WorkingMemory& WM, State& state) {
         }
     }
     // If the target is on the screen (this shouldn't happen but I
-    // kept this for completeness) by itself and we don't remember ti,
+    // kept this for completeness) by itself and we don't remember it,
     // then we look at it.
     // However, occasionally we fail to do this.
     else if (state.targetLocation != Nowhere && rememberedTarget == Nowhere) {
@@ -622,7 +623,7 @@ double rewardFunction(Episode& episode, State& state) {
 
         // Reward: Provided -> 20
         episode.success = true;
-        return 20.0;
+        return 1.0;
     }
 
     // Reward: Defaulted -> 0
